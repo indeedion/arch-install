@@ -47,5 +47,20 @@ else
 fi
 
 #Partition disk
-
+read -p "Choose size for /boot partiion(MiB): " BOOT_SIZE
+read -p "Choose size for Swap partition(GiB): " SWAP_SIZE
+read -p "Choose size for / partition(GiB): " ROOT_SIZE
+if ! sfdisk /dev/sda <<EOF
+,${BOOT_SIZE}MiB,83,*
+,${SWAP_SIZE}GiB,82
+,${ROOT_SIZE}GiB,83
+,,83
+EOF
+then
+    echo "[-] Partitioning failed"
+    exit 1
+else
+    echo "[+] Partitioning succeeded"
+    fdisk -l
+fi
 
