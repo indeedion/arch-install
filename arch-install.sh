@@ -1,47 +1,51 @@
 #!/bin/bash
 
-####****************************************#####
-####     INDEEDIONS ARCH-INSTALL SCRIPT     #####
-####****************************************#####
+##########################################################
+#  +++++++++ Indeedion Arch Installer V.0 ++++++++++     #
+#                                                        #
+#  Author: Magnus Jansson                                #
+#  Email: mengus00@gmail.com				 #
+#  Source: https://github.com/indeedion/arch-install     #
+#                                                        #
+##########################################################
 
+#Load keymap
+read -p "Choose keymap file: " kmap
+if ! loadkeys $kmap; then
+    echo "[!] keymap file not found or not running as root, using default keymap"
+fi
 
-#set keyboard layout
-exec loadkeys sv-latin1
+#Verify bootmode is legacy
+echo "Checking bootmode.."
+if ls /sys/firmware/efi/efivars 2>&1 >/dev/null; then
+    echo "[-] Error: EFI bootmode enabled, this script only works for legacy mode and MBR"
+    exit 1
+fi
+echo "[+] EFI bootmode not detected, asuming legacy boot"
 
-# skipping boot mode verification here
-
-#Verify internet connection -- TODO
+#Verify internet connection
+echo "Verifying internet connection.."
+if ! ping 8.8.8.8 -c 2 2>&1 >/dev/null; then
+    echo "[-] Error: no internet connection, terminating script"
+    exit 1
+fi
+echo "[+] Connection sucessfull"
 
 #Update system clock
-exec timedatectl set-ntp true &
-exec timedatectl set-timezone Europe/Stockholm &
-exec timedatectl status &
+echo "Updating system clock"
+if ! timedatectl set-ntp true 2>&1 >/dev/null; then
+    echo "[!] Failed to enable NTP client"
+else
+    echo "[+] NTP client enabled"
+fi
 
-#Partition disks -- TODO
+read -p "Choose timezone: " tzone
+if ! timedatectl set-timezone $tzone; then
+    echo "[!] Timezone not found, using default"
+else
+    echo "[+] Timezone set to $tzone"
+fi
 
-#Format partitions
-exec mkfs-ext4 /dev/sda1 &
-exec mkswap /dev/sda2 &
+#Partition disk
 
-#Mount filesystems
-exec mount /dev/sda1 /mnt/ &
 
-#Install base packages
-exec pacstrap /mnt base &
-
-#Configure the system
-exec genfstab -U /mnt >> /mnt/etc/fstab &
-exec arch-chroot /mnt &
-
-#move script focus to chrooted environment -- TODO
-
-#Configure time settings for new environment
-exec ln -sf /usr/share/zoneinfo/Europe/Stockholm /etc/localtime &  # set timezone
-exec hwclock --systohc & # not sure what this does, something with harware clock and UTC
-
-#Open /etc/locale.gen and uncomment needed locals
-#en_US.UTF-8, och den svenska.. -- TODO
-#add code here
-exec locale-gen & #generates the locals
-
-#
