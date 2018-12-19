@@ -74,8 +74,8 @@ echo "Done"
 
 #Mount filesystems
 echo "Mounting filesystems.."
-mkdir -p /mnt/boot
-mkdir -p /mnt/home
+mkdir -p /mnt/boot &&
+mkdir -p /mnt/home &&
 if ! mount /dev/sda1 /mnt/boot/; then
     echo "[!] Failed to mount sda1 /boot"
 else
