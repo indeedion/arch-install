@@ -98,42 +98,33 @@ fi
 
 #Mount filesystems
 echo "Mounting filesystems.."
-if ! mkdir -p /mnt/boot; then
-    echo "[-] Failed to create /mnt/boot" | tee -a $LOG
-    exit 1
-else
-    echo "[+] Created /mnt/boot successfully" | tee -a $LOG
-fi
-
-if ! mkdir -p /mnt/home; then
-    echo "[-] Failed to create /mnt/home" | tee -a $LOG
-    exit 1
-else
-    echo "[+] Created /mnt/home successfully" | tee -a $LOG
-fi
-
-if ! mount /dev/sda1 /mnt/boot/; then
-    echo "[!] Failed to mount sda1 /boot" | tee -a $LOG
-    exit 1
-else
-    echo "[+] sda1 mounted to /boot" | tee -a $LOG
-fi
-
-if ! mount /dev/sda3 /mnt/; then
-    echo "[-] Failed to mount sda3 to /" | tee -a $LOG
-    exit 1
-else
-    echo "[+] sda3 mounted to /" | tee -a $LOG
-fi
-
-if ! mount /dev/sda4 /mnt/home/; then
-    echo "[-] Failed to mount sda4 to /home" | tee -a $LOG
-    exit 1
-else
-    echo "[+] sda4 mounted to /home" | tee -a $LOG
-fi
+mkdir -p /mnt/boot &&
+echo "[+] Created /mnt/boot successfully" | tee -a $LOG
+mkdir -p /mnt/home &&
+echo "[+] Created /mnt/home successfully" | tee -a $LOG
 
 exit 1
+
+if ! mount /dev/sda1 /mnt/boot; then
+    echo "[!] Failed to mount sda1 /mnt/boot" | tee -a $LOG
+    exit 1
+else
+    echo "[+] sda1 mounted to /mnt/boot" | tee -a $LOG
+fi
+
+if ! mount /dev/sda3 /mnt; then
+    echo "[-] Failed to mount sda3 to /mnt/" | tee -a $LOG
+    exit 1
+else
+    echo "[+] sda3 mounted to /mnt/" | tee -a $LOG
+fi
+
+if ! mount /dev/sda4 /mnt/home; then
+    echo "[-] Failed to mount sda4 to /mnt/home" | tee -a $LOG
+    exit 1
+else
+    echo "[+] sda4 mounted to /mnt/home" | tee -a $LOG
+fi
 
 #Install base packages
 if ! pacstrap /mnt base; then
