@@ -99,9 +99,8 @@ fi
 
 #Mount filesystems
 echo "Mounting filesystems.."
-mkdir -p /mnt/boot &&
+echo -e "mkdir /mnt/boot && mkdir /mnt/home" 
 echo "[+] Created /mnt/boot successfully" | tee -a $LOG
-mkdir -p /mnt/home &&
 echo "[+] Created /mnt/home successfully" | tee -a $LOG
 
 if ! mount /dev/sda1 /mnt/boot; then
