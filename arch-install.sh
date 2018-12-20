@@ -11,6 +11,7 @@
 
 #Set up log file
 declare -r LOG=$(pwd)"/install.log"
+echo "" > $LOG
 
 #Set up script home
 declare -r SCRIPT_HOME=$(pwd)
@@ -102,8 +103,6 @@ mkdir -p /mnt/boot &&
 echo "[+] Created /mnt/boot successfully" | tee -a $LOG
 mkdir -p /mnt/home &&
 echo "[+] Created /mnt/home successfully" | tee -a $LOG
-
-exit 1
 
 if ! mount /dev/sda1 /mnt/boot; then
     echo "[!] Failed to mount sda1 /mnt/boot" | tee -a $LOG
