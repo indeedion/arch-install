@@ -9,41 +9,47 @@
 #                                                        #
 ##########################################################
 
+#Set up log file
+declare -r LOG=$(pwd)"/install.log"
+
+#Set up script home
+declare -r SCRIPT_HOME=$(pwd)
+
 #Load keymap
-read -p "Choose keymap file: " kmap
+read -p "Choose keymap file, example sv-latin1: " kmap
 if ! loadkeys $kmap; then
-    echo "[!] keymap file not found or not running as root, using default keymap"
+    echo "[!] keymap file not found or not running as root, using default keymap" | tee -a $LOG
 fi
 
 #Verify bootmode is legacy
 echo "Checking bootmode.."
 if ls /sys/firmware/efi/efivars 2>&1 >/dev/null; then
-    echo "[-] Error: EFI bootmode enabled, this script only works for legacy mode and MBR"
+    echo "[-] Error: EFI bootmode enabled, this script only works for legacy mode and MBR" | tee -a $LOG
     exit 1
 fi
-echo "[+] EFI bootmode not detected, asuming legacy boot"
+echo "[+] EFI bootmode not detected, asuming legacy boot" | tee -a $LOG
 
 #Verify internet connection
 echo "Verifying internet connection.."
 if ! ping 8.8.8.8 -c 2 2>&1 >/dev/null; then
-    echo "[-] Error: no internet connection, terminating script"
+    echo "[-] Error: no internet connection, terminating script" | tee -a $LOG
     exit 1
 fi
-echo "[+] Connection sucessfull"
+echo "[+] Connection sucessfull" | tee -a $LOG
 
 #Update system clock
 echo "Updating system clock"
 if ! timedatectl set-ntp true 2>&1 >/dev/null; then
-    echo "[!] Failed to enable NTP client"
+    echo "[!] Failed to enable NTP client" | tee -a $LOG
 else
-    echo "[+] NTP client enabled"
+    echo "[+] NTP client enabled" | tee -a $LOG
 fi
 
 read -p "Choose timezone: " tzone
 if ! timedatectl set-timezone $tzone; then
-    echo "[!] Timezone not found, using default"
+    echo "[!] Timezone not found, using default" | tee -a $LOG
 else
-    echo "[+] Timezone set to $tzone"
+    echo "[+] Timezone set to $tzone" | tee -a $LOG
 fi
 
 #Partition disk
@@ -57,64 +63,100 @@ if ! sfdisk /dev/sda <<EOF
 ,,83
 EOF
 then
-    echo "[-] Partitioning failed"
+    echo "[-] Partitioning failed" | tee -a $LOG
     exit 1
 else
-    echo "[+] Partitioning succeeded"
-    fdisk -l
+    echo "[+] Partitioning succeeded" | tee -a $LOG
+    fdisk -l | tee -a $LOG
 fi
 
 #Format partitions
 echo "Formatting partitions.."
-mkfs.ext4 /dev/sda1
-mkswap /dev/sda2
-mkfs.ext4 /dev/sda3
-mkfs.ext4 /dev/sda4
-echo "Done"
+if ! mkfs.ext4 /dev/sda1; then
+    echo "[-] mkfs failed to format sda1 to ext4" | tee -a $LOG
+else
+    echo "[+] sda1 formatted to ext4" | tee -a $LOG
+fi
+
+if ! mkswap /dev/sda2; then
+    echo "[!] mkswap formatting failed on sda2" | tee -a $LOG
+else
+    echo "[+] sda2 formatted to swap" | tee -a $LOG
+fi
+
+if ! mkfs.ext4 /dev/sda3; then
+    echo "[-] mkfs failed to format sda3 to ext4" | tee -a $LOG
+else
+    echo "[+] sda3 formatted to ext4" | tee -a $LOG
+fi
+
+if ! mkfs.ext4 /dev/sda4; then
+    echo "[-] mkfs failed to format sda4 to ext4" | tee -a $LOG
+else
+    echo "[+] sda4 formatted to ext4" | tee -a $LOG
+fi
 
 #Mount filesystems
 echo "Mounting filesystems.."
-mkdir -p /mnt/boot &&
-mkdir -p /mnt/home &&
-if ! mount /dev/sda1 /mnt/boot/; then
-    echo "[!] Failed to mount sda1 /boot"
+if ! mkdir -p /mnt/boot; then
+    echo "[-] Failed to create /mnt/boot" | tee -a $LOG
+    exit 1
 else
-    echo "[+] sda1 mounted to /boot"
+    echo "[+] Created /mnt/boot successfully" | tee -a $LOG
+fi
+
+if ! mkdir -p /mnt/home; then
+    echo "[-] Failed to create /mnt/home" | tee -a $LOG
+    exit 1
+else
+    echo "[+] Created /mnt/home successfully" | tee -a $LOG
+fi
+
+if ! mount /dev/sda1 /mnt/boot/; then
+    echo "[!] Failed to mount sda1 /boot" | tee -a $LOG
+    exit 1
+else
+    echo "[+] sda1 mounted to /boot" | tee -a $LOG
 fi
 
 if ! mount /dev/sda3 /mnt/; then
-    echo "[-] Failed to mount sda3 to /"
+    echo "[-] Failed to mount sda3 to /" | tee -a $LOG
     exit 1
 else
-    echo "[+] sda3 mounted to /"
+    echo "[+] sda3 mounted to /" | tee -a $LOG
 fi
 
 if ! mount /dev/sda4 /mnt/home/; then
-    echo "[!] Failed to mount sda4 to /home"
+    echo "[-] Failed to mount sda4 to /home" | tee -a $LOG
+    exit 1
 else
-    echo "[+] sda4 mounted to /home"
+    echo "[+] sda4 mounted to /home" | tee -a $LOG
 fi
+
+exit 1
 
 #Install base packages
 if ! pacstrap /mnt base; then
-    echo "[-] Failed to install base packages"
+    echo "[-] Failed to install base packages" | tee -a $LOG
+    exit 1
 else
-    echo "[+] Base packages installed successfully"
+    echo "[+] Base packages installed successfully" | tee -a $LOG
 fi
 
 #Create fstab
 if ! genfstab -U /mnt >> /mnt/etc/fstab; then
-    echo "[!] Failed to generate fstab"
+    echo "[-] Failed to generate fstab" | tee -a $LOG
+    exit 1
 else
-    echo "[+] fstab generated successfully"
+    echo "[+] fstab generated successfully" | tee -a $LOG
 fi
 
 #Chroot into new system
-echo "Chrooting into new system.."
-cp $HOME/arch-install/chroot-conf.sh /mnt/ &&
+echo "Chrooting into new system.." | tee -a $LOG
+cp $SCRIPT_HOME/chroot-conf.sh /mnt/ &&
 arch-chroot /mnt ./chroot-conf.sh &&
 
 #End message
-echo "[+] Arch has been successfully installed!, please reboot your system.."
+echo "[+] Arch has been successfully installed!, please reboot your system.." | tee -a $LOG
 
 
