@@ -99,22 +99,35 @@ fi
 
 #Mount filesystems
 echo "Mounting filesystems.."
-echo -e "mkdir /mnt/boot && mkdir /mnt/home" 
-echo "[+] Created /mnt/boot successfully" | tee -a $LOG
-echo "[+] Created /mnt/home successfully" | tee -a $LOG
-
-if ! mount /dev/sda1 /mnt/boot; then
-    echo "[!] Failed to mount sda1 /mnt/boot" | tee -a $LOG
-    exit 1
-else
-    echo "[+] sda1 mounted to /mnt/boot" | tee -a $LOG
-fi
 
 if ! mount /dev/sda3 /mnt; then
     echo "[-] Failed to mount sda3 to /mnt/" | tee -a $LOG
     exit 1
 else
     echo "[+] sda3 mounted to /mnt/" | tee -a $LOG
+fi
+
+if ! mkdir /mnt/boot; then
+    echo "[-] Failed to create /mnt/boot" | tee -a $LOG
+    exit 1
+else
+    echo "[+] /mnt/boot created successfully" | tee -a $LOG
+
+fi
+
+if ! mkdir /mnt/home; then
+    echo "[-] Failed to create /mnt/home/" | tee -a $LOG
+    exit 1
+else
+    echo "[+] /mnt/home created successfully" | tee -a $LOG
+
+fi
+
+if ! mount /dev/sda1 /mnt/boot; then
+    echo "[!] Failed to mount sda1 /mnt/boot" | tee -a $LOG
+    exit 1
+else
+    echo "[+] sda1 mounted to /mnt/boot" | tee -a $LOG
 fi
 
 if ! mount /dev/sda4 /mnt/home; then
