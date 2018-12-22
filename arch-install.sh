@@ -16,10 +16,15 @@ echo "" > $LOG
 #Set up script home
 declare -r SCRIPT_HOME=$(pwd)
 
+#Set up defaults
+declare -r DEF_KEYMAP="sv-latin1"
+declare -r DEF_TIMEZONE="Europe/Stockholm"
+
 #Load keymap
-read -p "Choose keymap file, example sv-latin1: " kmap
+read -p "Choose keymap file[sv-latin1]: " kmap
 if ! loadkeys $kmap; then
     echo "[!] keymap file not found or not running as root, using default keymap" | tee -a $LOG
+    loadkeys $DEF_KEYMAP
 fi
 
 #Verify bootmode is legacy
@@ -46,9 +51,10 @@ else
     echo "[+] NTP client enabled" | tee -a $LOG
 fi
 
-read -p "Choose timezone: " tzone
+read -p "Choose timezone[Europe/Stockholm]: " tzone
 if ! timedatectl set-timezone $tzone; then
     echo "[!] Timezone not found, using default" | tee -a $LOG
+    timedatectl set-timezone $DEF_TIMEZONE
 else
     echo "[+] Timezone set to $tzone" | tee -a $LOG
 fi

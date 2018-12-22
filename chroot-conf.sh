@@ -3,8 +3,18 @@
 #Set up log file
 declare -r LOG="/arch-install.log"
 
+#Set up defaults
+declare -r DEF_LOCALTIME="europe/Stockholm"
+declare -r DEF_KEYMAP="sv-latin1"
+
 #Configure new system
-if ! ln -sf /usr/share/zoneinfo/europe/Stockholm /etc/localtime; then
+read -p "Choose you localtime[europe/Stockholm]: " loctime
+
+if loctime == ""; then
+    loctime=DEF_LOCTIME
+fi
+
+if ! ln -sf /usr/share/zoneinfo/loctime /etc/localtime; then
     echo "[!] Failed to set localtime" | tee -a $LOG
 else
     echo "[+] Local time set successfully" | tee -a $LOG
@@ -41,7 +51,10 @@ echo "LANG=en_US.UTF-8" >> /etc/locale.conf
 echo "[+] Language locale set successfully in /etc/locale.conf" | tee -a $LOG
 
 #Set keymap
-read -p "Choose keymap for new system: " nkeymap
+read -p "Choose keymap for new system[sv-latin1]: " nkeymap
+if nkeymap == ""; then
+    nkeymap=DEF_KEYMAP
+fi
 echo "KEYMAP=$nkeymap" >> /etc/vconsole.conf
 echo "[+] Keymap $nkeymap set successfully in /etc/vconsole.conf" | tee -a $LOG
 
@@ -56,7 +69,7 @@ echo "[+] Hostname set to $hname" | tee -a $LOG
 echo "[+] Localhost set to defaults in /etc/hosts" | tee -a $LOG
 
 #Set root password
-echo "Choose root password: "
+echo "Choose root password!! "
 $(passwd) | tee -a $LOG
 
 #Install grub
