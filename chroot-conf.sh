@@ -65,7 +65,7 @@ pacman -S grub
 
 #Configure grub
 grub-install --target=i386-pc /dev/sda
-grub-mkconfig -o /boot/grub.cfg
+grub-mkconfig -o /boot/grub/grub.cfg
 echo "[+] grub installed successfully" | tee -a $LOG
 
 #Exit chroot environment
