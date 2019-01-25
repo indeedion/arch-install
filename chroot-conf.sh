@@ -87,7 +87,7 @@ if ! pacman -S syslinux; then
 	echo "[-] Syslinux not found in repository!" | tee -a $LOG
 	exit 1
 else
-	if ! syslinux -install_update -iam; then
+	if ! syslinux-install_update -iam; then
 		echo "[-] Syslinux update failed!" | tee -a $LOG
 		exit 1
 	fi
