@@ -22,6 +22,10 @@ declare -r DEF_TIMEZONE="Europe/Stockholm"
 
 #Load keymap
 read -p "Choose keymap file[sv-latin1]: " kmap
+if $kmap == ""; then
+    kmap=$DEF_KEYMAP
+fi
+
 if ! loadkeys $kmap; then
     echo "[!] keymap file not found or not running as root, using default keymap" | tee -a $LOG
     loadkeys $DEF_KEYMAP
