@@ -22,7 +22,7 @@ declare -r DEF_TIMEZONE="Europe/Stockholm"
 
 #Load keymap
 read -p "Choose keymap file[sv-latin1]: " kmap
-if $kmap == ""; then
+if [ ${#kmap} -lt 1 ]; then
     kmap=$DEF_KEYMAP
 fi
 

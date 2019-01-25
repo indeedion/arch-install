@@ -73,13 +73,27 @@ echo "Choose root password!! "
 $(passwd) | tee -a $LOG
 
 #Install grub
-echo "Installing grub.."
-pacman -S grub
+#echo "Installing grub.."
+#pacman -S grub
 
 #Configure grub
-grub-install --target=i386-pc /dev/sda
-grub-mkconfig -o /boot/grub/grub.cfg
-echo "[+] grub installed successfully" | tee -a $LOG
+#grub-install --target=i386-pc /dev/sda
+#grub-mkconfig -o /boot/grub/grub.cfg
+#echo "[+] grub installed successfully" | tee -a $LOG
+
+#install syslinux
+echo "Installing syslinux.."
+if ! pacman -S syslinux; then
+	echo "[-] Syslinux not found in repository!" | tee -a $LOG
+	exit 1
+else
+	if ! syslinux -install_update -iam; then
+		echo "[-] Syslinux update failed!" | tee -a $LOG
+		exit 1
+	fi
+	echo "[+] syslinux installed correctly" | tee -a $LOG
+	echo "[+] syslinux updated correctly" | tee -a $LOG
+fi
 
 #Exit chroot environment
 echo "Exiting chroot environment.." | tee -a $LOG
