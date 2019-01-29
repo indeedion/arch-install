@@ -112,8 +112,8 @@ function query_bootloader(){
 		2)
 			inst_syslinux ;;
 		*)
-			echo "non availible option chosen.."  ;;
-			query_bootloader
+			echo "non availible option chosen.." 
+			query_bootloader ;;
 	esac
 }
 
@@ -122,5 +122,4 @@ query_bootloader
 #Exit chroot environment
 echo "Exiting chroot environment.." | tee -a $LOG
 echo -e "exit"
-
 
