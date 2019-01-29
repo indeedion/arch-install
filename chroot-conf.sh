@@ -72,28 +72,52 @@ echo "[+] Localhost set to defaults in /etc/hosts" | tee -a $LOG
 echo "Choose root password!! "
 $(passwd) | tee -a $LOG
 
-#Install grub
-#echo "Installing grub.."
-#pacman -S grub
 
-#Configure grub
-#grub-install --target=i386-pc /dev/sda
-#grub-mkconfig -o /boot/grub/grub.cfg
-#echo "[+] grub installed successfully" | tee -a $LOG
+function inst_grub(){
 
-#install syslinux
-echo "Installing syslinux.."
-if ! pacman -S syslinux; then
-	echo "[-] Syslinux not found in repository!" | tee -a $LOG
-	exit 1
-else
-	if ! syslinux-install_update -iam; then
-		echo "[-] Syslinux update failed!" | tee -a $LOG
+	#Install grub
+	echo "Installing grub.."
+	pacman -S grub
+
+	Configure grub
+	grub-install --target=i386-pc /dev/sda
+	grub-mkconfig -o /boot/grub/grub.cfg
+	echo "[+] grub installed successfully" | tee -a $LOG
+}
+
+function inst_syslinux(){
+
+	#install syslinux
+	echo "Installing syslinux.."
+	if ! pacman -S syslinux; then
+		echo "[-] Syslinux not found in repository!" | tee -a $LOG
 		exit 1
+	else
+		if ! syslinux-install_update -iam; then
+			echo "[-] Syslinux update failed!" | tee -a $LOG
+			exit 1
+		fi
+		echo "[+] syslinux installed correctly" | tee -a $LOG
+		echo "[+] syslinux updated correctly" | tee -a $LOG
 	fi
-	echo "[+] syslinux installed correctly" | tee -a $LOG
-	echo "[+] syslinux updated correctly" | tee -a $LOG
-fi
+}
+
+function query_bootloader(){
+	#choose bootloader
+	read -p "choose prefered bootloader [1. Grub, 2. Syslinux]: " btload
+	
+	case $btload in
+		1)
+			inst_grub  ;;
+		2)
+			inst_syslinux ;;
+		*)
+			echo "non availible option chosen.."  ;;
+			query_bootloader
+	esac
+}
+
+query_bootloader
 
 #Exit chroot environment
 echo "Exiting chroot environment.." | tee -a $LOG
