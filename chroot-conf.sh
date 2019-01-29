@@ -79,7 +79,7 @@ function inst_grub(){
 	echo "Installing grub.."
 	pacman -S grub
 
-	Configure grub
+	#Configure grub
 	grub-install --target=i386-pc /dev/sda
 	grub-mkconfig -o /boot/grub/grub.cfg
 	echo "[+] grub installed successfully" | tee -a $LOG
