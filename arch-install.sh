@@ -20,132 +20,142 @@ declare -r SCRIPT_HOME=$(pwd)
 declare -r DEF_KEYMAP="sv-latin1"
 declare -r DEF_TIMEZONE="Europe/Stockholm"
 
-#Load keymap
-read -p "Choose keymap file[sv-latin1]: " kmap
-if [ ${#kmap} -lt 1 ]; then
-    kmap=$DEF_KEYMAP
-fi
+#dialog globals
+BACK_TITLE="BDOGZ ARCH INSTALLER"
 
-if ! loadkeys $kmap; then
-    echo "[!] keymap file not found or not running as root, using default keymap" | tee -a $LOG
-    loadkeys $DEF_KEYMAP
-fi
+#dialog functions
+function errbox() {
+    TITLE="ERROR!"
+    HEIGHT=15
+    WIDTH=40
+    ERROR="$1"
+
+    dialog --clear \
+	   --backtitle "$BACK_TITLE" \
+	   --title "$TITLE" \
+	   --msgbox "$ERROR" \
+           $HEIGHT $WIDTH
+    
+   echo "$ERROR" >> $LOG
+}
+
+function msgbox() {
+    TITLE="MESSAGE!"
+    HEIGHT=15
+    WIDTH=40
+    MESSAGE=$1
+
+    dialog --clear \
+	   --backtitle "$BACK_TITLE" \
+	   --title "$TITLE" \
+	   --msgbox "$MESSAGE" \
+	   $HEIGHT $WIDTH
+}
+
+#Load keymap
+INPUT=/tmp/lang.sh.$$
+HEIGHT=15
+WIDTH=40
+CHOICE_HEIGHT=4
+TITLE="Keyboard Layout"
+MENU="Choose your keyboard layout:"
+
+OPTIONS=(1 "Swedish - QWERTY"
+         2 "USA! USA! - QWERTY")
+
+dialog --clear \
+       --backtitle "$BACK_TITLE" \
+       --title "$TITLE" \
+       --menu "$MENU" \
+       $HEIGHT $WIDTH $CHOICE_HEIGHT \
+       "${OPTIONS[@]}" \
+       2>"${INPUT}"
+
+res=$(cat /tmp/lang.sh.$$)
+
+case $res in
+    1)
+        loadkeys sv-latin1
+        echo "sv-latin1" > /etc/vconsole.conf 
+        ;;
+    2)
+        loadkeys us
+        echo "us" > /etc/vconsole.conf
+        ;;
+    *)
+        loadkeys $DEFAULT_LANG
+        echo "$DEF_KEYMAP" > /etc/vconsole.conf
+        ;;
+esac
 
 #Verify bootmode is legacy
-echo "Checking bootmode.."
 if ls /sys/firmware/efi/efivars 2>&1 >/dev/null; then
-    echo "[-] Error: EFI bootmode enabled, this script only works for legacy mode and MBR" | tee -a $LOG
+    err="[-] Error: EFI bootmode enabled, installer only works in legacy mode"
+    errbox "$err"
     exit 1
 fi
-echo "[+] EFI bootmode not detected, asuming legacy boot" | tee -a $LOG
+echo "[+] EFI bootmode not detected, asuming legacy boot" >> $LOG
 
 #Verify internet connection
-echo "Verifying internet connection.."
 if ! ping 8.8.8.8 -c 2 2>&1 >/dev/null; then
-    echo "[-] Error: no internet connection, terminating script" | tee -a $LOG
+    err="[-] Error: no internet connection, terminating script"
+    errbox "$err"
     exit 1
 fi
-echo "[+] Connection sucessfull" | tee -a $LOG
+echo "[+] Connection sucessfull" >> $LOG
 
 #Update system clock
 echo "Updating system clock"
 if ! timedatectl set-ntp true 2>&1 >/dev/null; then
-    echo "[!] Failed to enable NTP client" | tee -a $LOG
+    errbox "[!] Failed to enable NTP client"
 else
-    echo "[+] NTP client enabled" | tee -a $LOG
+    echo "[+] NTP client enabled" >> $LOG
 fi
 
-read -p "Choose timezone[Europe/Stockholm]: " tzone
-if ! timedatectl set-timezone $tzone; then
-    echo "[!] Timezone not found, using default" | tee -a $LOG
-    timedatectl set-timezone $DEF_TIMEZONE
-else
-    echo "[+] Timezone set to $tzone" | tee -a $LOG
-fi
+#Choose timezone
+INPUT=/tmp/timez.sh.$$
+HEIGHT=15
+WIDTH=40
+CHOICE_HEIGHT=4
+TITLE="TIMEZONE"
+MENU="Choose your timezone:"
 
-#Partition disk
-read -p "Choose size for /boot partiion(MiB): " BOOT_SIZE
-read -p "Choose size for Swap partition(GiB): " SWAP_SIZE
-read -p "Choose size for / partition(GiB): " ROOT_SIZE
-if ! sfdisk /dev/sda <<EOF
-,${BOOT_SIZE}MiB,83,*
-,${SWAP_SIZE}GiB,82
-,${ROOT_SIZE}GiB,83
-,,83
-EOF
-then
-    echo "[-] Partitioning failed" | tee -a $LOG
-    exit 1
-else
-    echo "[+] Partitioning succeeded" | tee -a $LOG
-    fdisk -l | tee -a $LOG
-fi
+OPTIONS=(1 "Europe/Stockholm"
+	 2 "Europe/Berlin")
+
+dialog --clear \
+       --backtitle "$BACK_TITLE" \
+       --title "$TITLE" \
+       --menu "$MENU" \
+       $HEIGHT $WIDTH $CHOICE_HEIGHT \
+       "${OPTIONS[@]}" \
+       2>"${INPUT}"
+
+res=$(cat $INPUT)
+
+case $res in
+    1)
+	timedatectl set-timezone "Europe/Stockholm"
+	;;
+    2)
+	timedatectl set-timezone "Europe/Berlin"
+	;;
+    *)
+	timedatectl set-timezone "Europe/Stockholm"
+	;;
+esac 
+
+
+#Partition disks
+msgbox "Lets partition some stuff, press OK to continue"
+cfdisk
 
 #Format partitions
-echo "Formatting partitions.."
-if ! mkfs.ext4 /dev/sda1; then
-    echo "[-] mkfs failed to format sda1 to ext4" | tee -a $LOG
-else
-    echo "[+] sda1 formatted to ext4" | tee -a $LOG
-fi
-
-if ! mkswap /dev/sda2; then
-    echo "[!] mkswap formatting failed on sda2" | tee -a $LOG
-else
-    echo "[+] sda2 formatted to swap" | tee -a $LOG
-fi
-
-if ! mkfs.ext4 /dev/sda3; then
-    echo "[-] mkfs failed to format sda3 to ext4" | tee -a $LOG
-else
-    echo "[+] sda3 formatted to ext4" | tee -a $LOG
-fi
-
-if ! mkfs.ext4 /dev/sda4; then
-    echo "[-] mkfs failed to format sda4 to ext4" | tee -a $LOG
-else
-    echo "[+] sda4 formatted to ext4" | tee -a $LOG
-fi
+#Might not be neccesary
 
 #Mount filesystems
-echo "Mounting filesystems.."
 
-if ! mount /dev/sda3 /mnt; then
-    echo "[-] Failed to mount sda3 to /mnt/" | tee -a $LOG
-    exit 1
-else
-    echo "[+] sda3 mounted to /mnt/" | tee -a $LOG
-fi
 
-if ! mkdir /mnt/boot; then
-    echo "[-] Failed to create /mnt/boot" | tee -a $LOG
-    exit 1
-else
-    echo "[+] /mnt/boot created successfully" | tee -a $LOG
-
-fi
-
-if ! mkdir /mnt/home; then
-    echo "[-] Failed to create /mnt/home/" | tee -a $LOG
-    exit 1
-else
-    echo "[+] /mnt/home created successfully" | tee -a $LOG
-
-fi
-
-if ! mount /dev/sda1 /mnt/boot; then
-    echo "[!] Failed to mount sda1 /mnt/boot" | tee -a $LOG
-    exit 1
-else
-    echo "[+] sda1 mounted to /mnt/boot" | tee -a $LOG
-fi
-
-if ! mount /dev/sda4 /mnt/home; then
-    echo "[-] Failed to mount sda4 to /mnt/home" | tee -a $LOG
-    exit 1
-else
-    echo "[+] sda4 mounted to /mnt/home" | tee -a $LOG
-fi
 
 #Install base packages
 if ! pacstrap /mnt base; then
