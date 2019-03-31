@@ -1,6 +1,0 @@
-
-[+] EFI bootmode not detected, asuming legacy boot
-[+] Connection sucessfull
-[+] NTP client enabled
-[!] Timezone not found, using default
-[-] Partitioning failed
