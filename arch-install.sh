@@ -29,7 +29,7 @@ if ls /sys/firmware/efi/efivars 2>&1 >/dev/null; then
     echo "[-] Error: EFI bootmode enabled, installer only works in legacy mode" | tee -a $LOG
     exit 1
 fi
-echo "[+] EFI bootmode not detected, asuming legacy boot" | tee -a $LOG
+echo "[+] no EFI bootmode detected, asuming legacy boot" | tee -a $LOG
 
 #Verify internet connection
 if ! ping 8.8.8.8 -c 2 2>&1 >/dev/null; then
@@ -72,19 +72,19 @@ for i in "${partsFullArray[@]}"; do
     read -p "$i FORMAT: " format_inp
     case $format_inp in
 	ext4)
-	    mkfs.ext4 /dev/${partsCutArray[$counter]}
+	    mkfs.ext4 /dev/${partsCutArray[$counter]} > /dev/null
 	    (( counter++ ))
 	    ;;
 	swap)
-	    mkswap /dev/${partsCutArray[$counter]}
+	    mkswap /dev/${partsCutArray[$counter]} > /dev/null
 	    (( counter++ ))
 	    ;;
 	fat32)
-	    mkfs.vfat /dev/${partsCutArray[$counter]}
+	    mkfs.vfat /dev/${partsCutArray[$counter]} > /dev/null
 	    (( counter++ ))
 	    ;;
 	*)
-	    mkfs.ext4 /dev/${partsCutArray[$counter]}
+	    mkfs.ext4 /dev/${partsCutArray[$counter]} > /dev/null
 	    (( counter++ ))
     esac
 done
