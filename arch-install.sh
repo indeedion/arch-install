@@ -9,6 +9,10 @@
 #                                                        #
 ##########################################################
 
+clear
+echo "Welcome to the arch installer!! Press any key to continue.."
+read key
+
 #Set up log file
 declare -r LOG=$(pwd)"/install.log"
 echo "" > $LOG
@@ -43,11 +47,18 @@ else
 fi
 
 #Partition disks
+clear
+echo "DISK PARTITIONING"
+echo "press any key to continue.."
+read key
 cfdisk
 
 #Format partitions
+clear
+echo "PARTITION FORMATING"
+
 lsblk | grep part > /tmp/partsFull1234
-cat /tmp/partsFull1234 | cut -d " " -f 1 | cut -c 6- > /tmp/partsCut1234
+cat /tmp/partsFull1234 | cut -d " " -f 1 | cut -c 7- > /tmp/partsCut1234
 
 mapfile -t partsCutArray < /tmp/partsCut1234
 mapfile -t partsFullArray < /tmp/partsFull1234
@@ -79,8 +90,10 @@ for i in "${partsFullArray[@]}"; do
 done
 
 #Mount filesystems
+clear
+echo "MOUNTING FILESYSTEMS"
 counter=0
-echo "Enter mountpoint for each partition. Default is no mountpoint. Ex: /boot "
+echo "Enter mountpoint for each partition. Just press enter to skip current partition. Ex: /boot "
 for i in "${partsFullArray[@]}"; do
     read -p "$i MOUNTPOINT: " mpoint_inp
     if [ ${#mpoint_inp} -gt 0 ]; then
@@ -91,6 +104,8 @@ for i in "${partsFullArray[@]}"; do
 done
 
 #Install base packages
+clear
+echo "INSTALLING BASE PACKAGES"
 if ! pacstrap /mnt base; then
     echo "[-] Failed to install base packages" | tee -a $LOG
     exit 1
@@ -99,6 +114,8 @@ else
 fi
 
 #Create fstab
+clear
+echo "GENERATING FSTAB"
 if ! genfstab -U /mnt >> /mnt/etc/fstab; then
     echo "[-] Failed to generate fstab" | tee -a $LOG
     exit 1
@@ -107,11 +124,15 @@ else
 fi
 
 #Chroot into new system
+clear
+echo "CHROOTING INTO NEW SYSTEM"
 echo "Chrooting into new system.." | tee -a LOG
 cp $SCRIPT_HOME/chroot-conf.sh /mnt/ &&
 arch-chroot /mnt ./chroot-conf.sh &&
 
 #End message
+clear
+echo "END MESSAGE"
 echo "[+] Arch has been successfully installed!, please reboot your system.." | tee -a $LOG
 
 
