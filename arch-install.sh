@@ -64,8 +64,9 @@ mapfile -t partsCutArray < /tmp/partsCut1234
 mapfile -t partsFullArray < /tmp/partsFull1234
 
 echo "your partition table: "
+echo ""
 lsblk 
-
+echo ""
 echo "Choose partition formats, valid options are [ext4, swap, fat32] default is ext4:"
 counter=0
 for i in "${partsFullArray[@]}"; do

@@ -55,7 +55,7 @@ while [ "$loop_run" = true ]; do
     echo "1.Enter a locale"
     echo "2.Done entering locales"
     echo "3.List available locales"
-    read -p ">" locale_menu_inp
+    read -p "> " locale_menu_inp
 
     locale_array=()
     case $locale_menu_inp in
@@ -87,7 +87,7 @@ fi
 
 #Set language
 clear
-localedef --list-archive > /tmp/localesdef1234
+localectl list-locales > /tmp/localesdef1234
 mapfile -t locales_avail < /tmp/localesdef1234
 echo "CHOOSE YOUR LANGUAGE"
 echo "Choose from available language locales below"
@@ -96,7 +96,7 @@ for i in ${locales_avail[@]}; do
     echo "$counter.$i"
     (( counter++ ))
 done
-read -p ">" lang_inp
+read -p "> " lang_inp
 localectl set-locale "LANG=$lang_inp"
 
 #Set keymap
@@ -104,11 +104,11 @@ clear
 echo "CHOOSE KEYMAP"
 echo "Choose option to enter keymap, or list available keymaps to choose from, default(Enter) is \"us\""
 loop_run=true
-while [ loop_run ]; do
+while [ "$loop_run" = true ]; do
     echo "1.Enter keymap"
     echo "2.List keymaps"
 
-    read -p ">" keymap_inp
+    read -p "> " keymap_inp
     case $keymap_inp in
 	1)
 	    loadkeys $keymap_inp
