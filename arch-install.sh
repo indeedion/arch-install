@@ -20,142 +20,75 @@ declare -r SCRIPT_HOME=$(pwd)
 declare -r DEF_KEYMAP="sv-latin1"
 declare -r DEF_TIMEZONE="Europe/Stockholm"
 
-#dialog globals
-BACK_TITLE="BDOGZ ARCH INSTALLER"
-
-#dialog functions
-function errbox() {
-    TITLE="ERROR!"
-    HEIGHT=15
-    WIDTH=40
-    ERROR="$1"
-
-    dialog --clear \
-	   --backtitle "$BACK_TITLE" \
-	   --title "$TITLE" \
-	   --msgbox "$ERROR" \
-           $HEIGHT $WIDTH
-    
-   echo "$ERROR" >> $LOG
-}
-
-function msgbox() {
-    TITLE="MESSAGE!"
-    HEIGHT=15
-    WIDTH=40
-    MESSAGE=$1
-
-    dialog --clear \
-	   --backtitle "$BACK_TITLE" \
-	   --title "$TITLE" \
-	   --msgbox "$MESSAGE" \
-	   $HEIGHT $WIDTH
-}
-
-#Load keymap
-INPUT=/tmp/lang.sh.$$
-HEIGHT=15
-WIDTH=40
-CHOICE_HEIGHT=4
-TITLE="Keyboard Layout"
-MENU="Choose your keyboard layout:"
-
-OPTIONS=(1 "Swedish - QWERTY"
-         2 "USA! USA! - QWERTY")
-
-dialog --clear \
-       --backtitle "$BACK_TITLE" \
-       --title "$TITLE" \
-       --menu "$MENU" \
-       $HEIGHT $WIDTH $CHOICE_HEIGHT \
-       "${OPTIONS[@]}" \
-       2>"${INPUT}"
-
-res=$(cat /tmp/lang.sh.$$)
-
-case $res in
-    1)
-        loadkeys sv-latin1
-        echo "sv-latin1" > /etc/vconsole.conf 
-        ;;
-    2)
-        loadkeys us
-        echo "us" > /etc/vconsole.conf
-        ;;
-    *)
-        loadkeys $DEFAULT_LANG
-        echo "$DEF_KEYMAP" > /etc/vconsole.conf
-        ;;
-esac
-
 #Verify bootmode is legacy
 if ls /sys/firmware/efi/efivars 2>&1 >/dev/null; then
-    err="[-] Error: EFI bootmode enabled, installer only works in legacy mode"
-    errbox "$err"
+    echo "[-] Error: EFI bootmode enabled, installer only works in legacy mode" | tee -a $LOG
     exit 1
 fi
-echo "[+] EFI bootmode not detected, asuming legacy boot" >> $LOG
+echo "[+] EFI bootmode not detected, asuming legacy boot" | tee -a $LOG
 
 #Verify internet connection
 if ! ping 8.8.8.8 -c 2 2>&1 >/dev/null; then
-    err="[-] Error: no internet connection, terminating script"
-    errbox "$err"
+    echo "[-] Error: no internet connection, terminating script" | tee -a $LOG
     exit 1
 fi
-echo "[+] Connection sucessfull" >> $LOG
+echo "[+] Connection sucessfull" | tee -a $LOG
 
 #Update system clock
 echo "Updating system clock"
 if ! timedatectl set-ntp true 2>&1 >/dev/null; then
-    errbox "[!] Failed to enable NTP client"
+    echo "[!] Failed to enable NTP client" | tee -a $LOG
 else
-    echo "[+] NTP client enabled" >> $LOG
+    echo "[+] NTP client enabled" | tee -a $LOG
 fi
 
-#Choose timezone
-INPUT=/tmp/timez.sh.$$
-HEIGHT=15
-WIDTH=40
-CHOICE_HEIGHT=4
-TITLE="TIMEZONE"
-MENU="Choose your timezone:"
-
-OPTIONS=(1 "Europe/Stockholm"
-	 2 "Europe/Berlin")
-
-dialog --clear \
-       --backtitle "$BACK_TITLE" \
-       --title "$TITLE" \
-       --menu "$MENU" \
-       $HEIGHT $WIDTH $CHOICE_HEIGHT \
-       "${OPTIONS[@]}" \
-       2>"${INPUT}"
-
-res=$(cat $INPUT)
-
-case $res in
-    1)
-	timedatectl set-timezone "Europe/Stockholm"
-	;;
-    2)
-	timedatectl set-timezone "Europe/Berlin"
-	;;
-    *)
-	timedatectl set-timezone "Europe/Stockholm"
-	;;
-esac 
-
-
 #Partition disks
-msgbox "Lets partition some stuff, press OK to continue"
 cfdisk
 
 #Format partitions
-#Might not be neccesary
+lsblk | grep part > /tmp/partsFull1234
+cat /tmp/partsFull1234 | cut -d " " -f 1 | cut -c 6- > /tmp/partsCut1234
+
+mapfile -t partsCutArray < /tmp/partsCut1234
+mapfile -t partsFullArray < /tmp/partsFull1234
+
+echo "your partition table: "
+lsblk 
+
+echo "Choose partition formats, valid options are [ext4, swap, fat32] default is ext4:"
+counter=0
+for i in "${partsFullArray[@]}"; do
+    read -p "$i FORMAT: " format_inp
+    case $format_inp in
+	ext4)
+	    mkfs.ext4 /dev/${partsCutArray[$counter]}
+	    (( counter++ ))
+	    ;;
+	swap)
+	    mkswap /dev/${partsCutArray[$counter]}
+	    (( counter++ ))
+	    ;;
+	fat32)
+	    mkfs.vfat /dev/${partsCutArray[$counter]}
+	    (( counter++ ))
+	    ;;
+	*)
+	    mkfs.ext4 /dev/${partsCutArray[$counter]}
+	    (( counter++ ))
+    esac
+done
 
 #Mount filesystems
-
-
+counter=0
+echo "Enter mountpoint for each partition. Default is no mountpoint. Ex: /boot "
+for i in "${partsFullArray[@]}"; do
+    read -p "$i MOUNTPOINT: " mpoint_inp
+    if [ ${#mpoint_inp} -gt 0 ]; then
+	mkdir -p "/mnt$mpoint_inp"
+	mount /dev/${partsCutArray[$counter]} "/mnt/$mpoint_inp"
+	(( counter++ ))
+    fi
+done
 
 #Install base packages
 if ! pacstrap /mnt base; then
@@ -174,7 +107,7 @@ else
 fi
 
 #Chroot into new system
-echo "Chrooting into new system.." | tee -a $LOG
+echo "Chrooting into new system.." | tee -a LOG
 cp $SCRIPT_HOME/chroot-conf.sh /mnt/ &&
 arch-chroot /mnt ./chroot-conf.sh &&
 
