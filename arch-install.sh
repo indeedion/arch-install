@@ -25,7 +25,7 @@ declare -r DEF_KEYMAP="sv-latin1"
 declare -r DEF_TIMEZONE="Europe/Stockholm"
 
 #Verify bootmode is legacy
-if ls /sys/firmware/efi/efivars 2>&1 >/dev/null; then
+if ls /sys/firmware/efi/efivars > /dev/null 2>&1; then
     echo "[-] Error: EFI bootmode enabled, installer only works in legacy mode" | tee -a $LOG
     exit 1
 fi

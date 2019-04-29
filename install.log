@@ -1,1 +1,5 @@
 
+[+] no EFI bootmode detected, asuming legacy boot
+[+] Connection sucessfull
+[+] NTP client enabled
+[-] Failed to install base packages
