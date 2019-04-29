@@ -51,7 +51,7 @@ echo "CHOOSE LOCALE"
 echo "Choose as many locales as you want by entering a number from the list"
 echo "Default is $DEF_LOCALE, just press enter to choose this"
 loop_run=true
-while [ $loop_run ]; do
+while [ "$loop_run" = true ]; do
     echo "1.Enter a locale"
     echo "2.Done entering locales"
     echo "3.List available locales"
@@ -67,7 +67,7 @@ while [ $loop_run ]; do
 	    loop_run=false
 	    ;;
 	3)
-	    less /etc/local.gen
+	    less /etc/locale.gen
 	    ;;
 	*)
 	    sed -i "/^#.* $DEF_LOCALE /s/^#//" /etc/locale.gen
