@@ -92,7 +92,7 @@ mapfile -t locales_avail < /tmp/localesdef1234
 echo "CHOOSE YOUR LANGUAGE"
 echo "Choose from available language locales below"
 counter=1
-for i in ${locales_avail[@]}; do
+for i in "${locales_avail[@]}"; do
     echo "$counter.$i"
     (( counter++ ))
 done
@@ -108,11 +108,12 @@ while [ "$loop_run" = true ]; do
     echo "1.Enter keymap"
     echo "2.List keymaps"
 
-    read -p "> " keymap_inp
-    case $keymap_inp in
+    read -p "> " keymap_menu_inp
+    case $keymap_menu_inp in
 	1)
-	    loadkeys $keymap_inp
-	    echo "KEYMAP=keymap_inp" >> /etc/vconsole.conf
+	    read -p "Keymap: " keymap_inp
+	    loadkeys $keymap_inp 
+	    echo "KEYMAP=$keymap_inp" >> /etc/vconsole.conf
 	    loop_run=false
 	    ;;
 	2)
