@@ -47,7 +47,7 @@ fi
 
 #Uncomment needed locals
 clear
-echo "CHOOSE LOCALE"
+echo "CHOOSE LOCALES"
 echo "Choose as many locales as you want by entering a number from the list"
 echo "Default is $DEF_LOCALE, just press enter to choose this"
 loop_run=true
@@ -61,7 +61,7 @@ while [ "$loop_run" = true ]; do
     case $locale_menu_inp in
 	1)
 	    read -p "Locale: " locale_inp
-	    sed -i "/^#.* $locale_inp /s/^#//" /etc/locale.gen
+	    sed -i "/^#.*$locale_inp/s/^#//" /etc/locale.gen
 	    ;;
 	2)
 	    loop_run=false
@@ -70,7 +70,7 @@ while [ "$loop_run" = true ]; do
 	    less /etc/locale.gen
 	    ;;
 	*)
-	    sed -i "/^#.* $DEF_LOCALE /s/^#//" /etc/locale.gen
+	    sed -i "/^#.*$DEF_LOCALE/s/^#//" /etc/locale.gen
 	    loop_run=false
 	    ;;
     esac
@@ -92,8 +92,8 @@ mapfile -t locales_avail < /tmp/localesdef1234
 echo "CHOOSE YOUR LANGUAGE"
 echo "Choose from available language locales below"
 counter=1
-for i in "${locales_avail[@]}"; do
-    echo "$counter.$i"
+for loc in "${locales_avail[@]}"; do
+    echo "$counter.$loc"
     (( counter++ ))
 done
 read -p "> " lang_inp
