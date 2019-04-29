@@ -4,17 +4,17 @@
 declare -r LOG="/arch-install.log"
 
 #Set up defaults
-declare -r DEF_LOCALTIME="europe/Stockholm"
+declare -r DEF_LOCALTIME="Europe/Stockholm"
 declare -r DEF_KEYMAP="sv-latin1"
 
 #Configure new system
-read -p "Choose you localtime[europe/Stockholm]: " loctime
+read -p "Choose you localtime[Europe/Stockholm]: " loctime
 
-if loctime == ""; then
-    loctime=DEF_LOCTIME
+if [ $loctime -eq "" ]; then
+    loctime=$DEF_LOCTIME
 fi
 
-if ! ln -sf /usr/share/zoneinfo/loctime /etc/localtime; then
+if ! ln -sf /usr/share/zoneinfo/$loctime /etc/localtime; then
     echo "[!] Failed to set localtime" | tee -a $LOG
 else
     echo "[+] Local time set successfully" | tee -a $LOG
@@ -52,8 +52,8 @@ echo "[+] Language locale set successfully in /etc/locale.conf" | tee -a $LOG
 
 #Set keymap
 read -p "Choose keymap for new system[sv-latin1]: " nkeymap
-if nkeymap == ""; then
-    nkeymap=DEF_KEYMAP
+if [ nkeymap -eq "" ]; then
+    nkeymap=$DEF_KEYMAP
 fi
 echo "KEYMAP=$nkeymap" >> /etc/vconsole.conf
 echo "[+] Keymap $nkeymap set successfully in /etc/vconsole.conf" | tee -a $LOG
