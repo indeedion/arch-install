@@ -126,7 +126,6 @@ fi
 #Chroot into new system
 clear
 echo "CHROOTING INTO NEW SYSTEM"
-echo "Chrooting into new system.." | tee -a LOG
 cp $SCRIPT_HOME/chroot-conf.sh /mnt/ &&
 arch-chroot /mnt ./chroot-conf.sh &&
 
