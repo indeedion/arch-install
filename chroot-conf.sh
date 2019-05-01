@@ -194,6 +194,26 @@ function query_bootloader(){
 
 query_bootloader
 
+#Create user
+clear
+echo "CREATE A NON ROOT USER"
+read -p "Username: " user
+groupadd $user
+useradd -g $user $user
+passwd $user
+
+mkdir -p /home/$user
+mkdir -p /home/$user/Desktop
+mkdir -p /home/$user/Documents
+mkdir -p /home/$user/Pictures
+mkdir -p /home/$user/Downloads
+
+#setup sudo
+pacman -S sudo
+sed -i "/root ALL=(ALL) ALL/a$user ALL=(ALL) ALL" /etc/sudoers
+groupadd sudo
+usermod -a -G sudo $user
+
 #Exit chroot environment
 clear
 echo "Exiting chroot environment.." | tee -a $LOG
