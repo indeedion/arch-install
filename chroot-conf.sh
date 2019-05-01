@@ -209,7 +209,7 @@ mkdir -p /home/$user/Pictures
 mkdir -p /home/$user/Downloads
 
 #setup sudo
-pacman -S sudo
+pacman -S sudo vim git
 sed -i "/root ALL=(ALL) ALL/a$user ALL=(ALL) ALL" /etc/sudoers
 groupadd sudo
 usermod -a -G sudo $user
