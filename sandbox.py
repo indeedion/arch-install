@@ -16,10 +16,10 @@ class Choice(IntEnum):
     ARCH = 0
     BROWN_ARCH = 1
 
-def main(stdscr):
+def main(screen1):
     # Create screen manager
     screen = Screen.getInstance()
-    screen.init_screen_manager(stdscr)
+    screen.init_screen_manager(screen1)
 
     # Create and run welcome screen
     welcome_screen = WelcomeScreen()

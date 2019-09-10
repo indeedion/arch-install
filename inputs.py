@@ -19,12 +19,16 @@ class Inputs():
             # init attributes
             self.up = False
             self.down = False
-            self.enter = False 
+            self.enter = False
+            self.left = False
+            self.right = False 
             
     def update(self, key):
         self.up = False
         self.down = False
         self.enter = False
+        self.left = False
+        self.right = False
 
         if key == curses.KEY_UP:
             self.up = True
@@ -32,6 +36,10 @@ class Inputs():
             self.down = True
         elif key == curses.KEY_ENTER or key in [10, 13]:
             self.enter = True
+        elif key == curses.KEY_LEFT:
+            self.left = True
+        elif key == curses.KEY_RIGHT:
+            self.right = True
 
         
         
