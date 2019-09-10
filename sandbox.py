@@ -1,4 +1,4 @@
-from sultan.api import Sultan
+
 import curses
 import time
 from enum import IntEnum
