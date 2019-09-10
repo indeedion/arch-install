@@ -100,6 +100,15 @@ class ArchInstall():
             self.right_screen_msgs.append("Internet connection failed")
             self.update_screen()
             return False
+
+    def partition_disks(self):
+        subprocess.call('cfdisk', shell=False)
+        self.right_screen_msgs.append(
+            "Disk partitions done."
+        )
+        self.left_menu.selected_row += 1
+        screen.stdscr.clear()
+        self.update_screen()
         
     def add_to_right_screen(self, msg):
         s_row = self.left_menu.selected_row
@@ -144,9 +153,7 @@ class ArchInstall():
         res = os.popen('timedatectl set-ntp true 2>&1 >/dev/null').read()
 
         # Partition disks
-        subprocess.call('cfdisk', shell=False)
-        screen.stdscr.clear()
-        self.update_screen()
+        self.partition_disks()
 
         time.sleep(5)
 
