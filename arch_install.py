@@ -138,6 +138,9 @@ class ArchInstall():
 
         # Partition disks
         subprocess.call('cfdisk', shell=False)
+        screen.stdscr.clear()
+        self.update_screen()
+        
         time.sleep(5)
 
 
