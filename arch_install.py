@@ -224,7 +224,7 @@ class ArchInstall():
             if choice != None:
                 return choice 
 
-    def do_format(self, choices):
+    def do_format(self, choices, partitions):
         # format commands
         f_ext3 = 'mkfs.ext3'
         f_ext4 = 'mkfs.ext4'
@@ -235,9 +235,9 @@ class ArchInstall():
 
         # loop through choices and format
         for choice in choices:
-            part = choice.part
+            part = partitions[choice.part]
             form = choice.format
-            mp = choice.m_point
+            mp = self.m_points[choice.m_point]
             path = '/dev/' + part
             
             if form == FileFormats.EXT3:
@@ -293,7 +293,7 @@ class ArchInstall():
                 #this is from the exit menu
                 if partition_choice == 0:
                     #user pressed format
-                    self.do_format(choices)
+                    self.do_format(choices, parts)
                     break
                 elif partition_choice == 1:
                     #user pressed reset
