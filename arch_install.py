@@ -237,7 +237,7 @@ class ArchInstall():
         for choice in choices:
             part = partitions[choice.part]
             form = choice.format
-            mp = self.m_points[choice.m_point]
+            mp = '/mnt' + self.m_points[choice.m_point]
             path = '/dev/' + part
             
             if form == FileFormats.EXT3:
