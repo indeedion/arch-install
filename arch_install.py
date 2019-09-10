@@ -46,6 +46,8 @@ class ArchInstall():
         ]
 
         self.left_menu = Menu(screen.stdscr, self.steps)
+
+        self.right_screen_msgs = []
     
     def draw_left_screen(self):
         a = self.area_a
@@ -59,6 +61,15 @@ class ArchInstall():
         self.left_menu.print_menu(a.y + 3, a.x + 1)
         screen.stdscr.attron(curses.color_pair(1))
 
+    def draw_right_screen(self):
+        b = self.area_b
+        y = int(b.y + 3)
+        x = int(b.x + 1)
+
+        for i, msg in enumerate(self.right_screen_msgs):
+            screen.stdscr.attron(curses.color_pair(1))
+            screen.stdscr.addstr(y + i, x, msg)
+
     def log(self, msg):
         f = open(LOG_FILE, 'a')
         f.write(str(msg))
@@ -68,18 +79,12 @@ class ArchInstall():
         s_row = self.left_menu.selected_row
         # check for efi folder
         if os.path.exists("/sys/firmware/efi"):
-            screen.stdscr.addstr(
-                self.area_b.y + s_row + 3, 
-                self.area_b.x + 3, 
-                """It appears the computer is booted with EFI, 
+            self.right_screen_msgs.append("""It appears the computer is booted with EFI, 
                 we dont support EFI""")
-            screen.stdscr.refresh()
+            self.update_screen()
             return False
         else:
-            screen.stdscr.addstr(
-                int(self.area_b.y + s_row + 3), 
-                int(self.area_b.x + 3), 
-                "Legacy boot mode verified")
+            self.right_screen_msgs.append("Legacy boot mode verified")
             self.left_menu.selected_row += 1
             self.update_screen()
             return True
@@ -87,12 +92,12 @@ class ArchInstall():
     def verify_internet(self):
         try:
             response = urlopen('https://www.google.com/', timeout=10)
-            self.add_to_right_screen("Internet connection verified")
+            self.right_screen_msgs.append("Internet connection verified")
             self.left_menu.selected_row += 1
             self.update_screen()
             return True
         except:
-            self.add_to_right_screen("Internet connection failed") 
+            self.right_screen_msgs.append("Internet connection failed")
             self.update_screen()
             return False
         
@@ -104,7 +109,9 @@ class ArchInstall():
                 msg)
 
     def update_screen(self):
+        screen.stdscr.clear()
         self.draw_left_screen()
+        self.draw_right_screen()
         screen.stdscr.refresh()
 
     def failure_screen(self, msg):
@@ -140,7 +147,7 @@ class ArchInstall():
         subprocess.call('cfdisk', shell=False)
         screen.stdscr.clear()
         self.update_screen()
-        
+
         time.sleep(5)
 
 
